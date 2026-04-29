@@ -71,7 +71,7 @@ public class PDPQueryReaderServlet extends SlingSafeMethodsServlet {
     private static final String ID_COLUMN_NAME_PARAM = "identifierColumnName";
     private static final String UPDATE_COLUMN_NAME_PARAM = "updateColumnName";
 
-    private static final Set<String> ALLOWED_DELIMITERS = new HashSet<>(Arrays.asList(",", ";", "\t", "|"));
+    private static final Set<String> ALLOWED_DELIMITERS = new HashSet<>(Arrays.asList(",", ";"));
     private static final String DEFAULT_DELIMITER = ",";
 
     public Map<String, String> readCSV(SlingHttpServletRequest request, String delimiter)
