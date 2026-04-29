@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -61,6 +62,7 @@ public class PDPQueryReaderServlet extends SlingSafeMethodsServlet {
     private static final  String NOT_SUCCESS_UPDATE_PRODUCT_PAGE = "A TOTAL OF {} ROWS WERE NOT UPDATED";
 
 
+
     private static final String FILE_NAME_PARAM = "fileName";
     private static final String UPDATE_PROPERTY = "updateProperty";
     private static final String UPDATE_CF = "updateCF";
@@ -68,6 +70,9 @@ public class PDPQueryReaderServlet extends SlingSafeMethodsServlet {
     private static final String DELIMITER = "delimiter";
     private static final String ID_COLUMN_NAME_PARAM = "identifierColumnName";
     private static final String UPDATE_COLUMN_NAME_PARAM = "updateColumnName";
+
+    private static final Set<String> ALLOWED_DELIMITERS = new HashSet<>(Arrays.asList(",", ";", "\t", "|"));
+    private static final String DEFAULT_DELIMITER = ",";
 
     public Map<String, String> readCSV(SlingHttpServletRequest request, String delimiter)
             throws IOException {
@@ -81,6 +86,12 @@ public class PDPQueryReaderServlet extends SlingSafeMethodsServlet {
         String idColumnName = request.getParameter(ID_COLUMN_NAME_PARAM);
         String updateColumnName = request.getParameter(UPDATE_COLUMN_NAME_PARAM);
         String idColumn;
+
+        if (delimiter == null || !ALLOWED_DELIMITERS.contains(delimiter)) {
+            log.warn("{} Invalid or missing delimiter {}", LOG_START, delimiter);
+            delimiter = DEFAULT_DELIMITER;
+        }
+        final String safeDelimiterPattern = Pattern.quote(delimiter);
 
         if (fileName == null || updateColumnName == null) {
             log.debug("{} MISSING ONE OR MORE PARAMETERS", LOG_START);
@@ -100,7 +111,7 @@ public class PDPQueryReaderServlet extends SlingSafeMethodsServlet {
                         int idColumnIndex = -1;
                         int updateColumnIndex = 0;
                         String line = br.readLine();
-                        String[] splitLine = line.split(delimiter);
+                        String[] splitLine = line.split(safeDelimiterPattern);
 
                         for ( int i = 0; i < splitLine.length ; i++){
                             if ( splitLine[i].contains(updateColumnName) ) {
@@ -118,7 +129,7 @@ public class PDPQueryReaderServlet extends SlingSafeMethodsServlet {
                         }
 
                         while ( (line = br.readLine()) != null) {
-                            splitLine = line.split(delimiter);
+                            splitLine = line.split(safeDelimiterPattern);
 
                             if ( splitLine.length > idColumnIndex && splitLine.length > updateColumnIndex ) {
                                 idColumn = splitLine[idColumnIndex].replaceAll("\"", "").replaceAll(" ", "");
